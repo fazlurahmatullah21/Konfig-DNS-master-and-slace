@@ -3,7 +3,7 @@
 Server yang paling umum digunakan di internet, khususnya system
 operasi yang bertipe UNIX
 
-- Installasi Bid9
+- Installasi Bind9
  root@srv1:~# apt install bind9
 
 - Konfigurasi Cache Nameserver
