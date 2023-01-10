@@ -18,58 +18,38 @@ Server
 
 - Config named.conf.local
 
-// This is the primary configuration file for the BIND DNS server named.
-//
-// Please read /usr/share/doc/bind9/README.Debian.gz for information on the
-// structure of BIND configuration files in Debian, *BEFORE* you customize
-// this configuration file.
-//
-// If you are just adding zones, please do that in /etc/bind/named.conf.local
 
-include "/etc/bind/named.conf.options";
-include "/etc/bind/named.conf.local";
-include "/etc/bind/named.conf.default-zones";
-
-zone "sysidn.id" IN {
+root@srv1:/etc/bind# ls
+bind.keys  db.255    db.local    named.conf.default-zones  rndc.key
+db.0       db.empty  db.rev      named.conf.local          zones.rfc1918
+db.127     db.for    named.conf  named.conf.options
+root@srv1:/etc/bind# vim named.conf.local
+zone "fazlurwp.id" IN {
         type master;
-        file "/etc/bind/db.srv1forward";
-        allow-update {none;};
-        allow-transfer {10.23.1.122;};
-        also-notify {10.23.1.122;};
+        file "/etc/bind/db.for";
+        allow-transfer { 10.23.1.215; };
 };
-
-zone "1.23.10.in-addr.arpa" IN {
-        type master;
-        file "/etc/bind/db.srv1reverse";
-        allow-update {none;};
-        allow-transfer {10.23.1.122;};
-        also-notify {10.23.1.122;};
-};
-
-#tambahkan zone dibawah ini jika ip slave berbeda subnet/segment
 
 zone "3.23.10.in-addr.arpa" IN {
         type master;
-        file "/etc/bind/fazlurwp.id.reverse";
-        allow-update {none;};
-        allow-transfer {10.23.3.215;};
-        also-notify {10.23.3.215;};
+        file "/etc/bind/db.rev";
+        allow-transfer {10.23.1.215; };
 };
+
 
 
 - Copy file databases
 root@srv1:~# cd /etc/bind
-root@srv1:/etc/bind# cp db.local db.srv1forward
-root@srv1:/etc/bind# cp db.127 db.srv1reverse
+root@srv1:/etc/bind# cp db.local db.for
+root@srv1:/etc/bind# cp db.127 db.rev
 
 - Config Forwarder zone
-root@srv1:/etc/bind# nano db.srv1forward
-
+root@srv1:/etc/bind# nano db.for
 ;
 ; BIND data file for local loopback interface
 ;
 $TTL    604800
-@       IN      SOA     ns1.fazlurwp.id. root.fazlurwp.id. (
+@       IN      SOA     fazlurwp.id. root.fazlurwp.id. (
                               2         ; Serial
                          604800         ; Refresh
                           86400         ; Retry
@@ -78,22 +58,23 @@ $TTL    604800
 ;
 @       IN      NS      ns1.fazlurwp.id.
 @       IN      NS      ns2.fazlurwp.id.
-@       IN      A       10.23.3.215     ;ip srv1
+@       IN      A       10.23.3.214
 ns1     IN      A       10.23.3.214
-ns2     IN      A       10.23.3.215     ;ip srv2
-www     IN      A	10.23.3.215
+ns2     IN      A       10.23.1.215
+www     IN      CNAME   fazlurwp.id.
 blog    IN      CNAME   fazlurwp.id.
+mil     IN      CNAME   fazlurwp.id.
 
 
 
 - Config Reverse zone
-root@vschool:/etc/bind# :~# nano db.rw
+root@vschool:/etc/bind# :~# nano db.rev
 
 ;
 ; BIND reverse data file for local loopback interface
 ;
 $TTL    604800
-@       IN      SOA     ns1.fazlurwp.id. root.fazlurwp.id. (
+@       IN      SOA     fazlurwp.id. root.fazlurwp.id. (
                               1         ; Serial
                          604800         ; Refresh
                           86400         ; Retry
@@ -102,12 +83,11 @@ $TTL    604800
 ;
 @       IN      NS      ns1.fazlurwp.id.
 @       IN      NS      ns2.fazlurwp.id.
-214     IN      PTR     ns1.fazlurwp.id.        ;ip srv1
-215     IN      PTR     fazlurwp.id.            ;ip web srv1
+214     IN      PTR     ns1.fazlurwp.id.
+215     IN      PTR     ns2.fazlurwp.id.
 215     IN      PTR     www.fazlurwp.id.
 215     IN      PTR     blog.fazlurwp.id.
-215     IN      PTR     ns2.fazlurwp.id.
-
+214     IN      PTR     fazlurwp.id.
 
 
 
@@ -116,78 +96,46 @@ root@srv1:systemctl restart bind9
 
 Config Master and Slave
 
-- Config named.conf in srv1 (Master)
+- Config named.conf.local in srv1 (Master)
 
-// This is the primary configuration file for the BIND DNS server named.
-//
-// Please read /usr/share/doc/bind9/README.Debian.gz for information on the
-// structure of BIND configuration files in Debian, *BEFORE* you customize
-// this configuration file.
-//
-// If you are just adding zones, please do that in /etc/bind/named.conf.local
-
-include "/etc/bind/named.conf.options";
-include "/etc/bind/named.conf.local";
-include "/etc/bind/named.conf.default-zones";
-
-zone "sysidn.id" IN {
+zone "fazlurwp.id" IN {
         type master;
-        file "/etc/bind/db.srv1forward";
-        allow-update {none;};
-        allow-transfer {10.23.1.122;};
-        also-notify {10.23.1.122;};
+        file "/etc/bind/db.for";
+        allow-transfer { 10.23.1.215; };
 };
-
-zone "1.23.10.in-addr.arpa" IN {
-        type master;
-        file "/etc/bind/db.srv1reverse";
-        allow-update {none;};
-        allow-transfer {10.23.1.122;};
-        also-notify {10.23.1.122;};
-};
-
-#tambahkan zone dibawah ini jika ip slave berbeda subnet/segment
 
 zone "3.23.10.in-addr.arpa" IN {
         type master;
-        file "/etc/bind/db.srv1reverse";
-        allow-update {none;};
-        allow-transfer {10.23.1.122;};
-        also-notify {10.23.1.122;};
+        file "/etc/bind/db.rev";
+        allow-transfer {10.23.1.215; };
 };
+
+zone "1.23.10.in-addr.arpa" IN  {
+        type master;
+        file "/etc/bind/db.rev";
+        allow-transfer {10.23.1.215; };
+};
+
 
 
 - config name.conf in srv2 (Slave)
 
-// This is the primary configuration file for the BIND DNS server named.
-//
-// Please read /usr/share/doc/bind9/README.Debian.gz for information on the
-// structure of BIND configuration files in Debian, *BEFORE* you customize
-// this configuration file.
-//
-// If you are just adding zones, please do that in /etc/bind/named.conf.local
+zone "fazlurwp.id" IN {
+        type slave;
+        file "/var/cache/db.for";
+        masters {10.23.3.214; };
+};
 
-include "/etc/bind/named.conf.options";
-include "/etc/bind/named.conf.local";
-include "/etc/bind/named.conf.default-zones";
-
-zone "sysidn.id" IN {
-    type slave;
-	masters { 10.23.1.121; };
-        file "/var/cache/db.srv1forward";
+zone "3.23.10.in-addr.arpa" IN {
+        type slave;
+        file "/var/cache/db.rev";
+        masters {10.23.3.214; };
 };
 
 zone "1.23.10.in-addr.arpa" IN {
         type slave;
-	masters { 10.23.1.121; };
-        file "/var/cache/db.sr1reverse";
-};
-
-#tambahkan zone dibawah ini jika ip slave berbeda subnet/segment
-zone "3.23.10.in-addr.arpa" IN {
-        type slave;
-	masters { 10.23.1.121; };
-        file "/var/cache/db.srv1reverse";
+        file "/var/cache/db.rev1";
+        masters {10.23.3.214; };
 };
 
 
