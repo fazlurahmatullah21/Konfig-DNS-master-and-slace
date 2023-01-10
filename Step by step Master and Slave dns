@@ -47,6 +47,7 @@ zone "3.23.10.in-addr.arpa" IN {
         also-notify {10.23.3.215;};
 };
 
+#zone dibawah ditambahkan jika server slave berbeda segment/subnet
 zone "3.23.10.in-addr.arpa" IN {
         type master;
         file "/etc/bind/fazlurwp.id.reverse";
