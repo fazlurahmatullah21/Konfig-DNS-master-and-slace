@@ -78,11 +78,10 @@ $TTL    604800
 ;
 @       IN      NS      ns1.fazlurwp.id.
 @       IN      NS      ns2.fazlurwp.id.
-;@      IN      A       10.23.1.1       ;ip web server
-@       IN      A       10.23.3.214     ;ip srv1
+@       IN      A       10.23.3.215     ;ip srv1
 ns1     IN      A       10.23.3.214
 ns2     IN      A       10.23.3.215     ;ip srv2
-www     IN      A       10.23.3.215     ;web ip srv2
+www     IN      A	10.23.3.215
 blog    IN      CNAME   fazlurwp.id.
 
 
@@ -104,9 +103,9 @@ $TTL    604800
 @       IN      NS      ns1.fazlurwp.id.
 @       IN      NS      ns2.fazlurwp.id.
 214     IN      PTR     ns1.fazlurwp.id.        ;ip srv1
-1       IN      PTR     fazlurwp.id.            ;ip web srv1
-1       IN      PTR     www.fazlurwp.id.
-1       IN      PTR     blog.fazlurwp.id.
+215     IN      PTR     fazlurwp.id.            ;ip web srv1
+215     IN      PTR     www.fazlurwp.id.
+215     IN      PTR     blog.fazlurwp.id.
 215     IN      PTR     ns2.fazlurwp.id.
 
 
