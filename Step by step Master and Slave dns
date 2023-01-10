@@ -48,7 +48,7 @@ zone "1.23.10.in-addr.arpa" IN {
 
 #tambahkan zone dibawah ini jika ip slave berbeda subnet/segment
 
-zone "1.23.10.in-addr.arpa" IN {
+zone "3.23.10.in-addr.arpa" IN {
         type master;
         file "/etc/bind/fazlurwp.id.reverse";
         allow-update {none;};
@@ -117,7 +117,7 @@ root@srv1:systemctl restart bind9
 
 Config Master and Slave
 
-- config name.conf in srv1 (Master)
+- Config named.conf in srv1 (Master)
 
 // This is the primary configuration file for the BIND DNS server named.
 //
@@ -131,30 +131,31 @@ include "/etc/bind/named.conf.options";
 include "/etc/bind/named.conf.local";
 include "/etc/bind/named.conf.default-zones";
 
-zone "fazlurwp.id" IN {
+zone "sysidn.id" IN {
         type master;
-        file "/etc/bind/fazlurwp.id.forward";
+        file "/etc/bind/db.srv1forward";
         allow-update {none;};
-        allow-transfer {10.23.3.215;};
-        also-notify {10.23.3.215;};
+        allow-transfer {10.23.1.122;};
+        also-notify {10.23.1.122;};
 };
+
+zone "1.23.10.in-addr.arpa" IN {
+        type master;
+        file "/etc/bind/db.srv1reverse";
+        allow-update {none;};
+        allow-transfer {10.23.1.122;};
+        also-notify {10.23.1.122;};
+};
+
+#tambahkan zone dibawah ini jika ip slave berbeda subnet/segment
 
 zone "3.23.10.in-addr.arpa" IN {
         type master;
-        file "/etc/bind/fazlurwp.id.reverse";
+        file "/etc/bind/db.srv1reverse";
         allow-update {none;};
-        allow-transfer {10.23.3.215;};
-        also-notify {10.23.3.215;};
+        allow-transfer {10.23.1.122;};
+        also-notify {10.23.1.122;};
 };
-
-zone "3.23.10.in-addr.arpa" IN {
-        type master;
-        file "/etc/bind/fazlurwp.id.reverse";
-        allow-update {none;};
-        allow-transfer {10.23.3.215;};
-        also-notify {10.23.3.215;};
-};
-
 
 
 - config name.conf in srv2 (Slave)
@@ -171,22 +172,23 @@ include "/etc/bind/named.conf.options";
 include "/etc/bind/named.conf.local";
 include "/etc/bind/named.conf.default-zones";
 
-zone "fazlurwp.id" IN {
+zone "sysidn.id" IN {
     type slave;
-	masters { 10.23.3.214; };
-        file "/var/cache/bindfazlurwp.id.forward.slave";
+	masters { 10.23.1.121; };
+        file "/var/cache/db.srv1forward";
 };
 
-zone "3.23.10.in-addr.arpa" IN {
+zone "1.23.10.in-addr.arpa" IN {
         type slave;
-	masters { 10.23.3.214; };
-        file "/var/cache/bindfazlurwp.id.reverse.slave";
+	masters { 10.23.1.121; };
+        file "/var/cache/db.sr1reverse";
 };
 
+#tambahkan zone dibawah ini jika ip slave berbeda subnet/segment
 zone "3.23.10.in-addr.arpa" IN {
         type slave;
-	masters { 10.23.3.214; };
-        file "/var/cache/bindfazlurwp.id.reverse.slave"";
+	masters { 10.23.1.121; };
+        file "/var/cache/db.srv1reverse";
 };
 
 
@@ -194,5 +196,5 @@ zone "3.23.10.in-addr.arpa" IN {
 - Verifikasi DNS
 
 - nslookup
-root@srv1:~# nslookup fazlurwp.id
-root@srv1:~# nslookup 10.23.3.214/215
+root@srv1:~# nslookup sysidn.id
+root@srv1:~# nslookup 10.23.1.121 dan 10.23.1.122
