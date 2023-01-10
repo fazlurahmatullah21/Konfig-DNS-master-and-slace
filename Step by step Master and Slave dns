@@ -1,0 +1,197 @@
+- Installasi & Konfigurasi DNS Server
+ BIND (Berkeley Internet Name Domain) adalah salah satu aplikasi DNS
+Server yang paling umum digunakan di internet, khususnya system
+operasi yang bertipe UNIX
+
+- Installasi Bid9
+ root@srv1:~# apt install bind9
+
+- Konfigurasi Cache Nameserver
+ root@srv1:~# nano /etc/bind/named.conf.options
+
+	#Hapus tanda “//” di bagian berikut, dan tambahkan IP dari ISP atau IP
+Server
+
+ forwarders {
+	8.8.8.8;
+     };
+
+- Config named.conf.local
+- config name.conf in srv1
+
+// This is the primary configuration file for the BIND DNS server named.
+//
+// Please read /usr/share/doc/bind9/README.Debian.gz for information on the
+// structure of BIND configuration files in Debian, *BEFORE* you customize
+// this configuration file.
+//
+// If you are just adding zones, please do that in /etc/bind/named.conf.local
+
+include "/etc/bind/named.conf.options";
+include "/etc/bind/named.conf.local";
+include "/etc/bind/named.conf.default-zones";
+
+zone "fazlurwp.id" IN {
+        type master;
+        file "/etc/bind/fazlurwp.id.forward";
+        allow-update {none;};
+        allow-transfer {10.23.3.215;};
+        also-notify {10.23.3.215;};
+};
+
+zone "3.23.10.in-addr.arpa" IN {
+        type master;
+        file "/etc/bind/fazlurwp.id.reverse";
+        allow-update {none;};
+        allow-transfer {10.23.3.215;};
+        also-notify {10.23.3.215;};
+};
+
+zone "3.23.10.in-addr.arpa" IN {
+        type master;
+        file "/etc/bind/fazlurwp.id.reverse";
+        allow-update {none;};
+        allow-transfer {10.23.3.215;};
+        also-notify {10.23.3.215;};
+};
+
+
+- Copy file databases
+root@vschool:~# cd /etc/bind
+root@vschool:/etc/bind# cp db.local db.fw
+root@vschool:/etc/bind# cp db.127 db.rs
+
+- Config Forwarder zone
+root@vschool:/etc/bind# nano db.fw
+
+;
+; BIND data file for local loopback interface
+;
+$TTL    604800
+@       IN      SOA     ns1.fazlurwp.id. root.fazlurwp.id. (
+                              2         ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 )       ; Negative Cache TTL
+;
+@       IN      NS      ns1.fazlurwp.id.
+@       IN      NS      ns2.fazlurwp.id.
+;@      IN      A       10.23.1.1       ;ip web server
+@       IN      A       10.23.3.214     ;ip srv1
+ns1     IN      A       10.23.3.214
+ns2     IN      A       10.23.3.215     ;ip srv2
+www     IN      A       10.23.3.215     ;web ip srv2
+blog    IN      CNAME   fazlurwp.id.
+
+
+
+- Config Reverse zone
+root@vschool:/etc/bind# :~# nano db.rw
+
+;
+; BIND reverse data file for local loopback interface
+;
+$TTL    604800
+@       IN      SOA     ns1.fazlurwp.id. root.fazlurwp.id. (
+                              1         ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 )       ; Negative Cache TTL
+;
+@       IN      NS      ns1.fazlurwp.id.
+@       IN      NS      ns2.fazlurwp.id.
+214     IN      PTR     ns1.fazlurwp.id.        ;ip srv1
+1       IN      PTR     fazlurwp.id.            ;ip web srv1
+1       IN      PTR     www.fazlurwp.id.
+1       IN      PTR     blog.fazlurwp.id.
+215     IN      PTR     ns2.fazlurwp.id.
+
+
+
+
+- Restart BIND9
+root@srv1:systemctl restart bind9
+
+Config Master and Slave
+
+- config name.conf in srv1 (Master)
+
+// This is the primary configuration file for the BIND DNS server named.
+//
+// Please read /usr/share/doc/bind9/README.Debian.gz for information on the
+// structure of BIND configuration files in Debian, *BEFORE* you customize
+// this configuration file.
+//
+// If you are just adding zones, please do that in /etc/bind/named.conf.local
+
+include "/etc/bind/named.conf.options";
+include "/etc/bind/named.conf.local";
+include "/etc/bind/named.conf.default-zones";
+
+zone "fazlurwp.id" IN {
+        type master;
+        file "/etc/bind/fazlurwp.id.forward";
+        allow-update {none;};
+        allow-transfer {10.23.3.215;};
+        also-notify {10.23.3.215;};
+};
+
+zone "3.23.10.in-addr.arpa" IN {
+        type master;
+        file "/etc/bind/fazlurwp.id.reverse";
+        allow-update {none;};
+        allow-transfer {10.23.3.215;};
+        also-notify {10.23.3.215;};
+};
+
+zone "3.23.10.in-addr.arpa" IN {
+        type master;
+        file "/etc/bind/fazlurwp.id.reverse";
+        allow-update {none;};
+        allow-transfer {10.23.3.215;};
+        also-notify {10.23.3.215;};
+};
+
+
+
+- config name.conf in srv2 (Slave)
+
+// This is the primary configuration file for the BIND DNS server named.
+//
+// Please read /usr/share/doc/bind9/README.Debian.gz for information on the
+// structure of BIND configuration files in Debian, *BEFORE* you customize
+// this configuration file.
+//
+// If you are just adding zones, please do that in /etc/bind/named.conf.local
+
+include "/etc/bind/named.conf.options";
+include "/etc/bind/named.conf.local";
+include "/etc/bind/named.conf.default-zones";
+
+zone "fazlurwp.id" IN {
+    type slave;
+	masters { 10.23.3.214; };
+        file "/var/cache/bindfazlurwp.id.forward.slave";
+};
+
+zone "3.23.10.in-addr.arpa" IN {
+        type slave;
+	masters { 10.23.3.214; };
+        file "/var/cache/bindfazlurwp.id.reverse.slave";
+};
+
+zone "3.23.10.in-addr.arpa" IN {
+        type slave;
+	masters { 10.23.3.214; };
+        file "/var/cache/bindfazlurwp.id.reverse.slave"";
+};
+
+
+
+Verifikasi DNS
+
+- nslookup
+root@srv1:~# nslookup fazlurwp.id
+root@srv1:~# nslookup 10.23.3.214/215
