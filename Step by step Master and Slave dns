@@ -6,7 +6,7 @@ operasi yang bertipe UNIX
 - Installasi Bind9
  root@srv1:~# apt install bind9
 
-- Konfigurasi Cache Nameserver
+- Config Cache Nameserver
  root@srv1:~# nano /etc/bind/named.conf.options
 
 	#Hapus tanda “//” di bagian berikut, dan tambahkan IP dari ISP atau IP
@@ -17,7 +17,6 @@ Server
      };
 
 - Config named.conf.local
-- config name.conf in srv1
 
 // This is the primary configuration file for the BIND DNS server named.
 //
@@ -31,24 +30,25 @@ include "/etc/bind/named.conf.options";
 include "/etc/bind/named.conf.local";
 include "/etc/bind/named.conf.default-zones";
 
-zone "fazlurwp.id" IN {
+zone "sysidn.id" IN {
         type master;
-        file "/etc/bind/fazlurwp.id.forward";
+        file "/etc/bind/db.srv1forward";
         allow-update {none;};
-        allow-transfer {10.23.3.215;};
-        also-notify {10.23.3.215;};
+        allow-transfer {10.23.1.122;};
+        also-notify {10.23.1.122;};
 };
 
-zone "3.23.10.in-addr.arpa" IN {
+zone "1.23.10.in-addr.arpa" IN {
         type master;
-        file "/etc/bind/fazlurwp.id.reverse";
+        file "/etc/bind/db.srv1reverse";
         allow-update {none;};
-        allow-transfer {10.23.3.215;};
-        also-notify {10.23.3.215;};
+        allow-transfer {10.23.1.122;};
+        also-notify {10.23.1.122;};
 };
 
-#zone dibawah ditambahkan jika server slave berbeda segment/subnet
-zone "3.23.10.in-addr.arpa" IN {
+#tambahkan zone dibawah ini jika ip slave berbeda subnet/segment
+
+zone "1.23.10.in-addr.arpa" IN {
         type master;
         file "/etc/bind/fazlurwp.id.reverse";
         allow-update {none;};
@@ -58,12 +58,12 @@ zone "3.23.10.in-addr.arpa" IN {
 
 
 - Copy file databases
-root@vschool:~# cd /etc/bind
-root@vschool:/etc/bind# cp db.local db.fw
-root@vschool:/etc/bind# cp db.127 db.rs
+root@srv1:~# cd /etc/bind
+root@srv1:/etc/bind# cp db.local db.srv1forward
+root@srv1:/etc/bind# cp db.127 db.srv1reverse
 
 - Config Forwarder zone
-root@vschool:/etc/bind# nano db.fw
+root@srv1:/etc/bind# nano db.srv1forward
 
 ;
 ; BIND data file for local loopback interface
@@ -191,7 +191,7 @@ zone "3.23.10.in-addr.arpa" IN {
 
 
 
-Verifikasi DNS
+- Verifikasi DNS
 
 - nslookup
 root@srv1:~# nslookup fazlurwp.id
